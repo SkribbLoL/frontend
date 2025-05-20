@@ -13,8 +13,8 @@ RUN npm install
 # Copy the rest of the application code to the container
 COPY . .
 
-# Expose the port your Next.js app will run on
-EXPOSE 3000
+# Expose the port your Vite app will run on
+EXPOSE 5173
 
-# Define the command to start your Next.js application
-CMD [ "npm", "run", "dev" ]
+# Define the command to start your Vite application with host flag to expose on all interfaces
+CMD [ "npm", "run", "dev", "--", "--host", "0.0.0.0" ]
