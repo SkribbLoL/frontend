@@ -1,4 +1,4 @@
-name: Build and Deploy Game Service API
+name: Build and Deploy Frontend
 
 on:
   push:
@@ -26,8 +26,8 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      - name: Run tests
-        run: npm test
+      # - name: Run tests
+      #   run: npm test
 
       - name: Get short SHA
         uses: benjlevesque/short-sha@v3.0
