@@ -52,3 +52,59 @@ export default tseslint.config({
   },
 })
 ```
+
+## Testing
+
+This project includes comprehensive testing using Vitest and React Testing Library:
+
+### Setup
+
+- **Vitest**: Used as the test runner
+- **React Testing Library**: Used for rendering and interacting with components
+- **@testing-library/jest-dom**: Provides custom DOM element matchers
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+### Test Files
+
+- **Component Tests**: Located in `src/components/__tests__/`
+  - Tests for UI components like `ColorfulCharacters`
+
+- **Page Tests**: Located in `src/pages/__tests__/`
+  - Tests for pages like `HomePage` and `RoomPage`
+
+### Test Coverage
+
+- **Unit Tests**: Testing individual components in isolation
+- **Integration Tests**: Testing component interaction with APIs
+- **Mocking**: Socket.io connections and browser APIs
+
+### What to Test in Frontend
+
+1. **Component Rendering**: Verify components render correctly
+2. **User Interactions**: Test button clicks, form submissions, etc.
+3. **State Changes**: Ensure state updates correctly after user actions
+4. **API Interactions**: Test API calls are made with correct parameters
+5. **Error Handling**: Verify errors are displayed to the user
+6. **Responsive Behavior**: Test different screen sizes if applicable
+7. **Accessibility**: Test keyboard navigation and screen reader compatibility
+
+### Example Test
+
+```tsx
+it('renders all characters', () => {
+  render(<ColorfulCharacters />);
+  
+  // The component should render 8 characters
+  const characterElements = document.querySelectorAll('[style*="background-color"]');
+  expect(characterElements.length).toBe(8);
+});
+```
