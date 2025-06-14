@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { Button } from '../components/ui/button';
+import DrawingCanvas from '../components/DrawingCanvas';
+import Chat from '../components/Chat';
+import RoomSettings, { GameSettings } from '../components/RoomSettings';
 import config from '../config';
 
 interface User {
@@ -19,6 +22,12 @@ interface Room {
   rounds: number;
   currentRound: number;
   currentDrawer: string | null;
+  maxPlayers?: number;
+  roundDuration?: number;
+  gamePhase?: string;
+  currentWord?: string;
+  roundStartTime?: number;
+  roundEndTime?: number;
 }
 
 interface SocketErrorData {
@@ -111,6 +120,63 @@ const RoomPage = () => {
       setStartingGame(false);
     });
 
+    socketInstance.on('correct-guess', (data: {
+      userId: string;
+      username: string;
+      word: string;
+      points: number;
+      totalScore: number;
+      drawerPoints?: number;
+      drawerScore?: number;
+      message: string;
+    }) => {
+      console.log('Correct guess:', data);
+      // Update both the guesser's and drawer's scores in the room state
+      setRoom(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          users: prev.users.map(user => {
+            if (user.id === data.userId) {
+              // Update guesser's score
+              return { ...user, score: data.totalScore };
+            } else if (user.id === prev.currentDrawer && data.drawerScore !== undefined) {
+              // Update drawer's score
+              return { ...user, score: data.drawerScore };
+            }
+            return user;
+          })
+        };
+      });
+    });
+
+    socketInstance.on('game-ended', (data: {
+      room: Room;
+      winner: { nickname: string; score: number };
+      finalScores: Array<{ id: string; nickname: string; score: number }>;
+      message: string;
+    }) => {
+      console.log('Game ended:', data);
+      setRoom(data.room);
+    });
+
+    socketInstance.on('new-round', (data: {
+      room: Room;
+      message: string;
+    }) => {
+      console.log('New round:', data);
+      setRoom(data.room);
+    });
+
+    socketInstance.on('game-restarted', (data: {
+      room: Room;
+      message: string;
+    }) => {
+      console.log('Game restarted:', data);
+      setRoom(data.room);
+      setGameStartError(''); // Clear any previous errors
+    });
+
     // Clean up on unmount
     return () => {
       if (socketInstance) {
@@ -121,6 +187,10 @@ const RoomPage = () => {
         socketInstance.off('user-joined');
         socketInstance.off('user-left');
         socketInstance.off('game-started');
+        socketInstance.off('correct-guess');
+        socketInstance.off('game-ended');
+        socketInstance.off('new-round');
+        socketInstance.off('game-restarted');
         socketInstance.disconnect();
       }
     };
@@ -139,26 +209,23 @@ const RoomPage = () => {
     }
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = (settings: GameSettings) => {
     if (!socket || !room) return;
     
-    // Check if there are enough players
-    if (room.users.length < 2) {
-      setGameStartError('Need at least 2 players to start the game');
-      return;
-    }
-
     setGameStartError('');
     setStartingGame(true);
     
-    // Emit start game event
+    // Emit start game event with settings
     socket.emit('start-game', {
-      rounds: config.game.defaultRounds
+      rounds: settings.rounds,
+      maxPlayers: settings.maxPlayers,
+      roundDuration: settings.roundDuration
     });
   };
 
   // Current user from the room data
   const currentUser = room?.users.find(user => user.id === userId);
+  const currentUserNickname = currentUser?.nickname || 'Unknown';
 
   if (error) {
     return (
@@ -189,7 +256,7 @@ const RoomPage = () => {
 
   return (
     <div className="min-h-screen bg-background p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <header className="bg-card rounded-lg shadow-md mb-6 p-4 border border-border">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -218,9 +285,10 @@ const RoomPage = () => {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-          <aside className="md:col-span-1">
-            <div className="bg-card rounded-lg shadow-md p-5 border border-border">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 h-[calc(100vh-200px)]">
+          {/* Players Panel - Left Side */}
+          <aside className="lg:col-span-1">
+            <div className="bg-card rounded-lg shadow-md p-5 border border-border h-full">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center justify-between">
                 <span>Players</span>
                 <span className="text-sm font-normal text-muted-foreground">{room.users.length}/10</span>
@@ -235,13 +303,18 @@ const RoomPage = () => {
                     }`}
                   >
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-primary-foreground font-medium ${
+                        room.currentDrawer === user.id ? 'bg-green-500' : 'bg-primary'
+                      }`}>
                         {user.nickname.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-3">
                         <span className="font-medium text-foreground">{user.nickname}</span>
                         {user.isHost && (
                           <span className="ml-2 text-xs text-primary font-medium">Host</span>
+                        )}
+                        {room.currentDrawer === user.id && (
+                          <span className="ml-2 text-xs text-green-600 font-medium">Drawing</span>
                         )}
                       </div>
                     </div>
@@ -251,24 +324,11 @@ const RoomPage = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          </aside>
 
-          <main className="md:col-span-3">
-            <div className="bg-card rounded-lg shadow-md p-5 border border-border">
-              {room.gameStarted ? (
-                <div className="relative aspect-video bg-muted rounded-lg overflow-hidden mb-6 flex items-center justify-center">
-                  <p className="text-foreground">Game is in progress!</p>
-                </div>
-              ) : (
-                <div className="relative aspect-video bg-muted rounded-lg overflow-hidden mb-6 flex items-center justify-center">
-                  <p className="text-muted-foreground">Waiting for game to start...</p>
-                </div>
-              )}
-
+              {/* Game controls - only show if user is host and game hasn't started */}
               {currentUser?.isHost && !room.gameStarted && (
                 <div className="mt-6 p-4 bg-secondary rounded-lg border border-border text-center">
-                  <p className="mb-4 text-secondary-foreground">You are the host. Start the game when everyone is ready.</p>
+                  <p className="mb-4 text-secondary-foreground text-sm">Configure game settings to start playing.</p>
                   
                   {gameStartError && (
                     <div className="mb-4 p-3 bg-destructive/10 rounded text-sm text-destructive">
@@ -276,23 +336,43 @@ const RoomPage = () => {
                     </div>
                   )}
                   
-                  <Button 
-                    onClick={handleStartGame}
-                    disabled={startingGame || room.users.length < 2} 
-                    className="w-full max-w-xs py-5 text-base font-medium"
-                  >
-                    {startingGame ? 'Starting...' : 'Start Game'}
-                  </Button>
-                  
-                  {room.users.length < 2 && (
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      You need at least 2 players to start the game. Currently: {room.users.length}/2
-                    </p>
-                  )}
+                  <RoomSettings
+                    onStartGame={handleStartGame}
+                    isStarting={startingGame}
+                    minPlayers={2}
+                    currentPlayers={room.users.length}
+                  />
                 </div>
               )}
             </div>
+          </aside>
+
+          {/* Drawing Canvas - Center */}
+          <main className="lg:col-span-2">
+            <div className="bg-card rounded-lg shadow-md p-5 border border-border h-full">
+              <DrawingCanvas
+                roomCode={roomCode!}
+                userId={userId!}
+                username={currentUserNickname}
+                isGameStarted={room.gameStarted}
+                currentDrawer={room.currentDrawer}
+                users={room.users}
+                socket={socket}
+                room={room}
+              />
+            </div>
           </main>
+
+          {/* Chat Panel - Right Side */}
+          <aside className="lg:col-span-1">
+            <Chat
+              roomCode={roomCode!}
+              userId={userId!}
+              username={currentUserNickname}
+              isGameStarted={room.gameStarted}
+              socket={socket}
+            />
+          </aside>
         </div>
       </div>
     </div>
