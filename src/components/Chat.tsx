@@ -24,32 +24,7 @@ const Chat: React.FC<ChatProps> = ({
   isGameStarted,
   socket
 }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      userId: 'system',
-      username: 'System',
-      message: 'Welcome to the chat!',
-      timestamp: Date.now(),
-      type: 'system'
-    },
-    {
-      id: '2',
-      userId: 'user1',
-      username: 'Player1',
-      message: 'Hello everyone!',
-      timestamp: Date.now() + 1000,
-      type: 'message'
-    },
-    {
-      id: '3',
-      userId: 'user2',
-      username: 'Player2',
-      message: 'Ready to play!',
-      timestamp: Date.now() + 2000,
-      type: 'message'
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -62,40 +37,63 @@ const Chat: React.FC<ChatProps> = ({
   useEffect(() => {
     if (!socket) return;
 
+    const handleChatHistory = (data: { messages: Message[] }) => {
+      console.log('Received chat history:', data);
+      setMessages(data.messages);
+    };
+
     const handleChatMessage = (data: {
+      id: string;
       userId: string;
-      nickname: string;
+      username: string;
       message: string;
       timestamp: number;
-      isGuess?: boolean;
+      type: 'message' | 'guess';
     }) => {
+      console.log('Received chat message:', data);
       const newMessage: Message = {
-        id: `${data.timestamp}-${data.userId}`,
+        id: data.id,
         userId: data.userId,
-        username: data.nickname,
+        username: data.username,
         message: data.message,
         timestamp: data.timestamp,
-        type: data.isGuess ? 'guess' : (isGameStarted ? 'guess' : 'message')
+        type: data.type
       };
 
       setMessages(prev => [...prev, newMessage]);
     };
 
-    const handleCorrectGuess = (data: {
+    const handleGameModeChanged = (data: {
+      isGameStarted: boolean;
+      message: string;
+    }) => {
+      console.log('Game mode changed:', data);
+      const newMessage: Message = {
+        id: `game-mode-${Date.now()}`,
+        userId: 'system',
+        username: 'System',
+        message: data.message,
+        timestamp: Date.now(),
+        type: 'system'
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+    };
+
+    const handleCorrectGuessNotification = (data: {
       userId: string;
       username: string;
       word: string;
       points: number;
       totalScore: number;
-      drawerPoints?: number;
-      drawerScore?: number;
-      message: string;
+      message?: string;
     }) => {
+      console.log('Correct guess notification:', data);
       const newMessage: Message = {
         id: `correct-${Date.now()}-${data.userId}`,
         userId: 'system',
         username: 'System',
-        message: data.message,
+        message: data.message || `${data.username} guessed "${data.word}" correctly! (+${data.points} points)`,
         timestamp: Date.now(),
         type: 'system'
       };
@@ -103,15 +101,16 @@ const Chat: React.FC<ChatProps> = ({
       setMessages(prev => [...prev, newMessage]);
     };
 
-    const handleGameEnded = (data: {
-      winner: { nickname: string; score: number };
-      message: string;
+    const handleUserJoinedChat = (data: {
+      userId: string;
+      username: string;
     }) => {
+      console.log('User joined chat:', data);
       const newMessage: Message = {
-        id: `game-end-${Date.now()}`,
+        id: `join-${Date.now()}-${data.userId}`,
         userId: 'system',
         username: 'System',
-        message: data.message,
+        message: `${data.username} joined the chat`,
         timestamp: Date.now(),
         type: 'system'
       };
@@ -119,31 +118,48 @@ const Chat: React.FC<ChatProps> = ({
       setMessages(prev => [...prev, newMessage]);
     };
 
+    const handleUserLeftChat = (data: {
+      userId: string;
+      username: string;
+    }) => {
+      console.log('User left chat:', data);
+      const newMessage: Message = {
+        id: `leave-${Date.now()}-${data.userId}`,
+        userId: 'system',
+        username: 'System',
+        message: `${data.username} left the chat`,
+        timestamp: Date.now(),
+        type: 'system'
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+    };
+
+    // Chat service events
+    socket.on('chat-history', handleChatHistory);
     socket.on('chat-message', handleChatMessage);
-    socket.on('correct-guess', handleCorrectGuess);
-    socket.on('game-ended', handleGameEnded);
+    socket.on('game-mode-changed', handleGameModeChanged);
+    socket.on('correct-guess-notification', handleCorrectGuessNotification);
+    socket.on('user-joined-chat', handleUserJoinedChat);
+    socket.on('user-left-chat', handleUserLeftChat);
 
     return () => {
+      socket.off('chat-history', handleChatHistory);
       socket.off('chat-message', handleChatMessage);
-      socket.off('correct-guess', handleCorrectGuess);
-      socket.off('game-ended', handleGameEnded);
+      socket.off('game-mode-changed', handleGameModeChanged);
+      socket.off('correct-guess-notification', handleCorrectGuessNotification);
+      socket.off('user-joined-chat', handleUserJoinedChat);
+      socket.off('user-left-chat', handleUserLeftChat);
     };
-  }, [socket, isGameStarted]);
+  }, [socket]);
 
   const handleSendMessage = () => {
     if (!inputMessage.trim() || !socket) return;
 
-    if (isGameStarted) {
-      // During game, treat messages as guesses
-      socket.emit('guess-word', {
-        guess: inputMessage.trim()
-      });
-    } else {
-      // Regular chat message
-      socket.emit('chat-message', {
-        message: inputMessage.trim()
-      });
-    }
+    // Send message to chat service (it will handle game vs chat logic)
+    socket.emit('chat-message', {
+      message: inputMessage.trim()
+    });
 
     setInputMessage('');
   };
@@ -191,6 +207,12 @@ const Chat: React.FC<ChatProps> = ({
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2 min-h-0">
+        {messages.length === 0 && (
+          <div className="text-center text-muted-foreground text-sm py-8">
+            <p>Welcome to the chat!</p>
+            <p>Messages will appear here.</p>
+          </div>
+        )}
         {messages.map((message) => (
           <div key={message.id} className={`p-2 rounded-lg transition-colors ${getMessageStyle(message)}`}>
             {message.type !== 'system' && (

@@ -2,15 +2,15 @@
  * Application configuration
  */
 
-// Simple NodePort configuration - direct access to services
+// Traefik ingress configuration - path-based routing
 const config = {
   // API endpoints
   api: {
-    // Direct NodePort access - no port forwarding needed
-    baseUrl: 'http://localhost:30000',
-    wsUrl: 'http://localhost:30000',
-    drawingService: 'http://localhost:30001',
-    chatService: 'http://localhost:30002',
+    // Traefik ingress paths - all through localhost with path prefixes
+    baseUrl: 'http://localhost/game',
+    wsUrl: 'ws://localhost/game',
+    drawingService: 'http://localhost/drawing',
+    chatService: 'http://localhost/chat',
   },
   
   // Game settings

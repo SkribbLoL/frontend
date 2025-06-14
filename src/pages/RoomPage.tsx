@@ -48,10 +48,12 @@ const RoomPage = () => {
   const location = useLocation();
   const userId = new URLSearchParams(location.search).get('userId');
   
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [gameSocket, setGameSocket] = useState<Socket | null>(null);
+  const [chatSocket, setChatSocket] = useState<Socket | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [error, setError] = useState<string>('');
-  const [isConnected, setIsConnected] = useState(false);
+  const [isGameConnected, setIsGameConnected] = useState(false);
+  const [isChatConnected, setIsChatConnected] = useState(false);
   const [copySuccess, setCopySuccess] = useState('');
   const [startingGame, setStartingGame] = useState(false);
   const [gameStartError, setGameStartError] = useState<string>('');
@@ -63,36 +65,40 @@ const RoomPage = () => {
       return;
     }
 
-    // Connect to socket.io server
-    const socketInstance = io(config.api.wsUrl);
-    setSocket(socketInstance);
+    // Connect to game service
+    const gameSocketInstance = io(config.api.wsUrl);
+    setGameSocket(gameSocketInstance);
 
-    // Socket event listeners
-    socketInstance.on('connect', () => {
-      console.log('Connected to server');
-      setIsConnected(true);
+    // Connect to chat service
+    const chatSocketInstance = io(config.api.chatService);
+    setChatSocket(chatSocketInstance);
+
+    // Game socket event listeners
+    gameSocketInstance.on('connect', () => {
+      console.log('Connected to game service');
+      setIsGameConnected(true);
       
-      // Join the room
-      socketInstance.emit('join-room', { roomCode, userId });
+      // Join the game room
+      gameSocketInstance.emit('join-room', { roomCode, userId });
     });
 
-    socketInstance.on('disconnect', () => {
-      console.log('Disconnected from server');
-      setIsConnected(false);
+    gameSocketInstance.on('disconnect', () => {
+      console.log('Disconnected from game service');
+      setIsGameConnected(false);
     });
 
-    socketInstance.on('error', (data: SocketErrorData) => {
-      console.error('Socket error:', data.message);
+    gameSocketInstance.on('error', (data: SocketErrorData) => {
+      console.error('Game socket error:', data.message);
       setError(data.message);
       setStartingGame(false);
     });
 
-    socketInstance.on('room-joined', (data: SocketRoomData) => {
+    gameSocketInstance.on('room-joined', (data: SocketRoomData) => {
       console.log('Room joined:', data);
       setRoom(data.room);
     });
 
-    socketInstance.on('user-joined', (data: SocketUserData) => {
+    gameSocketInstance.on('user-joined', (data: SocketUserData) => {
       console.log('User joined:', data);
       setRoom(prev => {
         if (!prev) return null;
@@ -103,7 +109,7 @@ const RoomPage = () => {
       });
     });
 
-    socketInstance.on('user-left', (data: SocketUserData) => {
+    gameSocketInstance.on('user-left', (data: SocketUserData) => {
       console.log('User left:', data);
       setRoom(prev => {
         if (!prev) return null;
@@ -114,13 +120,13 @@ const RoomPage = () => {
       });
     });
 
-    socketInstance.on('game-started', (data: SocketRoomData) => {
+    gameSocketInstance.on('game-started', (data: SocketRoomData) => {
       console.log('Game started:', data);
       setRoom(data.room);
       setStartingGame(false);
     });
 
-    socketInstance.on('correct-guess', (data: {
+    gameSocketInstance.on('correct-guess', (data: {
       userId: string;
       username: string;
       word: string;
@@ -150,7 +156,7 @@ const RoomPage = () => {
       });
     });
 
-    socketInstance.on('game-ended', (data: {
+    gameSocketInstance.on('game-ended', (data: {
       room: Room;
       winner: { nickname: string; score: number };
       finalScores: Array<{ id: string; nickname: string; score: number }>;
@@ -160,7 +166,7 @@ const RoomPage = () => {
       setRoom(data.room);
     });
 
-    socketInstance.on('new-round', (data: {
+    gameSocketInstance.on('new-round', (data: {
       room: Room;
       message: string;
     }) => {
@@ -168,7 +174,7 @@ const RoomPage = () => {
       setRoom(data.room);
     });
 
-    socketInstance.on('game-restarted', (data: {
+    gameSocketInstance.on('game-restarted', (data: {
       room: Room;
       message: string;
     }) => {
@@ -177,24 +183,70 @@ const RoomPage = () => {
       setGameStartError(''); // Clear any previous errors
     });
 
+    // Chat socket event listeners
+    chatSocketInstance.on('connect', () => {
+      console.log('Connected to chat service');
+      setIsChatConnected(true);
+      
+      // Join the chat room
+      const currentUser = room?.users.find(user => user.id === userId);
+      const username = currentUser?.nickname || 'Unknown';
+      
+      chatSocketInstance.emit('join-chat-room', { 
+        roomCode, 
+        userId, 
+        username 
+      });
+    });
+
+    chatSocketInstance.on('disconnect', () => {
+      console.log('Disconnected from chat service');
+      setIsChatConnected(false);
+    });
+
+    chatSocketInstance.on('error', (data: SocketErrorData) => {
+      console.error('Chat socket error:', data.message);
+    });
+
     // Clean up on unmount
     return () => {
-      if (socketInstance) {
-        socketInstance.off('connect');
-        socketInstance.off('disconnect');
-        socketInstance.off('error');
-        socketInstance.off('room-joined');
-        socketInstance.off('user-joined');
-        socketInstance.off('user-left');
-        socketInstance.off('game-started');
-        socketInstance.off('correct-guess');
-        socketInstance.off('game-ended');
-        socketInstance.off('new-round');
-        socketInstance.off('game-restarted');
-        socketInstance.disconnect();
+      if (gameSocketInstance) {
+        gameSocketInstance.off('connect');
+        gameSocketInstance.off('disconnect');
+        gameSocketInstance.off('error');
+        gameSocketInstance.off('room-joined');
+        gameSocketInstance.off('user-joined');
+        gameSocketInstance.off('user-left');
+        gameSocketInstance.off('game-started');
+        gameSocketInstance.off('correct-guess');
+        gameSocketInstance.off('game-ended');
+        gameSocketInstance.off('new-round');
+        gameSocketInstance.off('game-restarted');
+        gameSocketInstance.disconnect();
+      }
+      
+      if (chatSocketInstance) {
+        chatSocketInstance.off('connect');
+        chatSocketInstance.off('disconnect');
+        chatSocketInstance.off('error');
+        chatSocketInstance.disconnect();
       }
     };
   }, [roomCode, userId]);
+
+  // Join chat room when room data is available
+  useEffect(() => {
+    if (chatSocket && room && userId) {
+      const currentUser = room.users.find(user => user.id === userId);
+      const username = currentUser?.nickname || 'Unknown';
+      
+      chatSocket.emit('join-chat-room', { 
+        roomCode, 
+        userId, 
+        username 
+      });
+    }
+  }, [chatSocket, room, userId, roomCode]);
 
   const handleCopyRoomCode = () => {
     navigator.clipboard.writeText(roomCode || '');
@@ -203,20 +255,23 @@ const RoomPage = () => {
   };
 
   const handleLeaveRoom = () => {
-    if (socket) {
-      socket.emit('leave-room');
-      window.location.href = '/';
+    if (gameSocket) {
+      gameSocket.emit('leave-room');
     }
+    if (chatSocket) {
+      chatSocket.emit('leave-chat-room');
+    }
+    window.location.href = '/';
   };
 
   const handleStartGame = (settings: GameSettings) => {
-    if (!socket || !room) return;
+    if (!gameSocket || !room) return;
     
     setGameStartError('');
     setStartingGame(true);
     
     // Emit start game event with settings
-    socket.emit('start-game', {
+    gameSocket.emit('start-game', {
       rounds: settings.rounds,
       maxPlayers: settings.maxPlayers,
       roundDuration: settings.roundDuration
@@ -226,6 +281,8 @@ const RoomPage = () => {
   // Current user from the room data
   const currentUser = room?.users.find(user => user.id === userId);
   const currentUserNickname = currentUser?.nickname || 'Unknown';
+
+  const isConnected = isGameConnected && isChatConnected;
 
   if (error) {
     return (
@@ -248,7 +305,11 @@ const RoomPage = () => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-muted-foreground font-medium">Connecting to room...</p>
+          <p className="text-muted-foreground font-medium">
+            Connecting to services... 
+            {isGameConnected ? '✅ Game' : '⏳ Game'} 
+            {isChatConnected ? ' ✅ Chat' : ' ⏳ Chat'}
+          </p>
         </div>
       </div>
     );
@@ -357,7 +418,7 @@ const RoomPage = () => {
                 isGameStarted={room.gameStarted}
                 currentDrawer={room.currentDrawer}
                 users={room.users}
-                socket={socket}
+                socket={gameSocket}
                 room={room}
               />
             </div>
@@ -370,7 +431,7 @@ const RoomPage = () => {
               userId={userId!}
               username={currentUserNickname}
               isGameStarted={room.gameStarted}
-              socket={socket}
+              socket={chatSocket}
             />
           </aside>
         </div>
