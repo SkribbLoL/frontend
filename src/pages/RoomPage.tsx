@@ -187,16 +187,7 @@ const RoomPage = () => {
     chatSocketInstance.on('connect', () => {
       console.log('Connected to chat service');
       setIsChatConnected(true);
-      
-      // Join the chat room
-      const currentUser = room?.users.find(user => user.id === userId);
-      const username = currentUser?.nickname || 'Unknown';
-      
-      chatSocketInstance.emit('join-chat-room', { 
-        roomCode, 
-        userId, 
-        username 
-      });
+      // Don't join chat room here - wait for room data to be available
     });
 
     chatSocketInstance.on('disconnect', () => {

@@ -2,15 +2,15 @@
  * Application configuration
  */
 
-// Traefik ingress configuration - path-based routing
+// Docker Compose configuration - direct service communication
 const config = {
   // API endpoints
   api: {
-    // Traefik ingress paths - all through localhost with path prefixes
-    baseUrl: 'http://localhost/game',
-    wsUrl: 'ws://localhost/game',
-    drawingService: 'http://localhost/drawing',
-    chatService: 'http://localhost/chat',
+    // For Docker Compose, services are exposed on different ports
+    baseUrl: `http://localhost:5000`,
+    wsUrl: `http://localhost:5000`,
+    drawingService: `http://localhost:5001`,
+    chatService: `http://localhost:5002`,
   },
   
   // Game settings
