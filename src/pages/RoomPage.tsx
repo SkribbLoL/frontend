@@ -79,6 +79,7 @@ const RoomPage = () => {
       setIsGameConnected(true);
       
       // Join the game room
+      console.log('Emitting join-room event with:', { roomCode, userId });
       gameSocketInstance.emit('join-room', { roomCode, userId });
     });
 
@@ -94,7 +95,7 @@ const RoomPage = () => {
     });
 
     gameSocketInstance.on('room-joined', (data: SocketRoomData) => {
-      console.log('Room joined:', data);
+      console.log('Room joined successfully:', data);
       setRoom(data.room);
     });
 
@@ -231,6 +232,7 @@ const RoomPage = () => {
       const currentUser = room.users.find(user => user.id === userId);
       const username = currentUser?.nickname || 'Unknown';
       
+      console.log('Emitting join-chat-room event with:', { roomCode, userId, username });
       chatSocket.emit('join-chat-room', { 
         roomCode, 
         userId, 
