@@ -77,7 +77,6 @@ const RoomPage = () => {
       timeout: 20000,
       forceNew: true,
       autoConnect: true,
-      path: '/socket.io/', // Ensure path matches server
     });
 
     setChatSocket(chatSocketInstance);
