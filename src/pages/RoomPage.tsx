@@ -70,7 +70,15 @@ const RoomPage = () => {
     setGameSocket(gameSocketInstance);
 
     // Connect to chat service
-    const chatSocketInstance = io(config.api.chatService);
+    const chatSocketInstance = io(config.api.chatService, {
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+      rememberUpgrade: true,
+      timeout: 20000,
+      forceNew: true,
+      autoConnect: true,
+      path: '/socket.io/', // Ensure path matches server
+    });
     setChatSocket(chatSocketInstance);
 
     // Game socket event listeners
