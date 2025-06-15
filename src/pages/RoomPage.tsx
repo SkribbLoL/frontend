@@ -66,19 +66,15 @@ const RoomPage = () => {
     }
 
     // Connect to game service
-    const gameSocketInstance = io(config.api.wsUrl);
+    const gameSocketInstance = io(config.api.wsUrl, {
+      transports: ['polling'] // Disable WebSocket, use only HTTP polling
+    });
     setGameSocket(gameSocketInstance);
 
     // Connect to chat service
-    const chatSocketInstance = io('http://localhost:5002', {
-      transports: ['websocket', 'polling'],
-      upgrade: true,
-      rememberUpgrade: true,
-      timeout: 20000,
-      forceNew: true,
-      autoConnect: true,
+    const chatSocketInstance = io(config.api.chatService, {
+      transports: ['polling'] // Disable WebSocket, use only HTTP polling
     });
-
     setChatSocket(chatSocketInstance);
 
     // Game socket event listeners
