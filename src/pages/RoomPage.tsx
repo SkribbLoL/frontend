@@ -91,10 +91,12 @@ const RoomPage = () => {
 
     gameSocketInstance.on('connect_error', (error) => {
       console.error('🔥 Game socket connection error:', error);
+      console.error('🔥 Game socket error object:', JSON.stringify(error, null, 2));
     });
 
     gameSocketInstance.on('error', (data: SocketErrorData) => {
       console.error('🔥 Game socket error:', data.message);
+      console.error('🔥 Game socket error data:', data);
       setError(data.message);
       setStartingGame(false);
     });
@@ -209,10 +211,12 @@ const RoomPage = () => {
 
     chatSocketInstance.on('connect_error', (error) => {
       console.error('🔥 Chat socket connection error:', error);
+      console.error('🔥 Chat socket error object:', JSON.stringify(error, null, 2));
     });
 
     chatSocketInstance.on('error', (data: SocketErrorData) => {
       console.error('🔥 Chat socket error:', data.message);
+      console.error('🔥 Chat socket error data:', data);
     });
 
     // Add a catch-all event listener for chat socket too
