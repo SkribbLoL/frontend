@@ -2,9 +2,20 @@
  * Application configuration
  */
 
-// Docker Compose configuration - direct service communication
+// Kubernetes/Production configuration - Traefik ingress routing
 const config = {
   // API endpoints
+  api: {
+    // For Kubernetes, services are accessed through ingress routes
+    baseUrl: `http://localhost/game`,
+    wsUrl: `http://localhost/game`,
+    drawingService: `http://localhost/drawing`,
+    chatService: `http://localhost/chat`,
+  },
+  
+  // Docker Compose configuration - direct service communication
+  // Uncomment below and comment above for Docker Compose usage
+  /*
   api: {
     // For Docker Compose, services are exposed on different ports
     baseUrl: `http://localhost:5000`,
@@ -12,6 +23,7 @@ const config = {
     drawingService: `http://localhost:5001`,
     chatService: `http://localhost:5002`,
   },
+  */
   
   // Game settings
   game: {
