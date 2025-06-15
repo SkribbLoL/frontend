@@ -8,7 +8,7 @@ const config = {
   api: {
     // For Kubernetes, services are accessed through ingress routes
     baseUrl: `http://localhost/game`,
-    wsUrl: `http://localhost/game`,
+    wsUrl: `ws://localhost/chat/socket.io/`,
     drawingService: `http://localhost/drawing`,
     chatService: `http://localhost/chat`,
   },
