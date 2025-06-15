@@ -1,20 +1,24 @@
 # Use an official Node.js runtime as a parent image
-FROM node:20
+FROM node:20-alpine
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the container
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install the project dependencies
 RUN npm install
 
-# Copy the rest of the application code to the container
+# Copy the rest of the application code
 COPY . .
 
-# Expose the port your Vite app will run on
+# Build the production version of the app
+RUN npm run build
+
+# Install a static file server to serve the built files
+RUN npm install -g serve
+
+# Expose the port for the static server
 EXPOSE 5173
 
-# Define the command to start your Vite application with host flag to expose on all interfaces
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Command to serve the built app
+CMD ["serve", "-s", "dist", "-l", "5173"]
