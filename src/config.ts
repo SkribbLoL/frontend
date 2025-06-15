@@ -8,10 +8,9 @@ const config = {
   api: {
     // For Kubernetes, services are accessed through ingress routes
     baseUrl: `http://localhost/game`,
-    // Try connecting directly to service ports to bypass ingress
-    wsUrl: `http://localhost:30000`,
-    drawingService: `http://localhost:30001`,
-    chatService: `http://localhost:30002`,
+    wsUrl: `http://localhost/game`,
+    drawingService: `http://localhost/drawing`,
+    chatService: `http://localhost/chat`,
   },
   
   // Docker Compose configuration - direct service communication
