@@ -75,27 +75,32 @@ const RoomPage = () => {
 
     // Game socket event listeners
     gameSocketInstance.on('connect', () => {
-      console.log('Connected to game service');
+      console.log('✅ Connected to game service');
+      console.log('Game socket ID:', gameSocketInstance.id);
       setIsGameConnected(true);
       
       // Join the game room
-      console.log('Emitting join-room event with:', { roomCode, userId });
+      console.log('🚀 Emitting join-room event with:', { roomCode, userId });
       gameSocketInstance.emit('join-room', { roomCode, userId });
     });
 
     gameSocketInstance.on('disconnect', () => {
-      console.log('Disconnected from game service');
+      console.log('❌ Disconnected from game service');
       setIsGameConnected(false);
     });
 
+    gameSocketInstance.on('connect_error', (error) => {
+      console.error('🔥 Game socket connection error:', error);
+    });
+
     gameSocketInstance.on('error', (data: SocketErrorData) => {
-      console.error('Game socket error:', data.message);
+      console.error('🔥 Game socket error:', data.message);
       setError(data.message);
       setStartingGame(false);
     });
 
     gameSocketInstance.on('room-joined', (data: SocketRoomData) => {
-      console.log('Room joined successfully:', data);
+      console.log('🎉 Room joined successfully:', data);
       setRoom(data.room);
     });
 
@@ -184,20 +189,35 @@ const RoomPage = () => {
       setGameStartError(''); // Clear any previous errors
     });
 
+    // Add a catch-all event listener to see what events are being received
+    gameSocketInstance.onAny((eventName, ...args) => {
+      console.log('🎯 Game socket received event:', eventName, args);
+    });
+
     // Chat socket event listeners
     chatSocketInstance.on('connect', () => {
-      console.log('Connected to chat service');
+      console.log('✅ Connected to chat service');
+      console.log('Chat socket ID:', chatSocketInstance.id);
       setIsChatConnected(true);
       // Don't join chat room here - wait for room data to be available
     });
 
     chatSocketInstance.on('disconnect', () => {
-      console.log('Disconnected from chat service');
+      console.log('❌ Disconnected from chat service');
       setIsChatConnected(false);
     });
 
+    chatSocketInstance.on('connect_error', (error) => {
+      console.error('🔥 Chat socket connection error:', error);
+    });
+
     chatSocketInstance.on('error', (data: SocketErrorData) => {
-      console.error('Chat socket error:', data.message);
+      console.error('🔥 Chat socket error:', data.message);
+    });
+
+    // Add a catch-all event listener for chat socket too
+    chatSocketInstance.onAny((eventName, ...args) => {
+      console.log('💬 Chat socket received event:', eventName, args);
     });
 
     // Clean up on unmount
@@ -228,11 +248,18 @@ const RoomPage = () => {
 
   // Join chat room when room data is available
   useEffect(() => {
+    console.log('🔍 Chat join effect triggered:', { 
+      hasChatSocket: !!chatSocket, 
+      hasRoom: !!room, 
+      hasUserId: !!userId,
+      roomCode 
+    });
+    
     if (chatSocket && room && userId) {
       const currentUser = room.users.find(user => user.id === userId);
       const username = currentUser?.nickname || 'Unknown';
       
-      console.log('Emitting join-chat-room event with:', { roomCode, userId, username });
+      console.log('🚀 Emitting join-chat-room event with:', { roomCode, userId, username });
       chatSocket.emit('join-chat-room', { 
         roomCode, 
         userId, 
@@ -276,6 +303,16 @@ const RoomPage = () => {
   const currentUserNickname = currentUser?.nickname || 'Unknown';
 
   const isConnected = isGameConnected && isChatConnected;
+
+  // Debug connection states
+  console.log('🔍 Connection states:', {
+    isGameConnected,
+    isChatConnected,
+    isConnected,
+    hasRoom: !!room,
+    roomCode,
+    userId
+  });
 
   if (error) {
     return (
