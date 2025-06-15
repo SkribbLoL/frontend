@@ -66,11 +66,15 @@ const RoomPage = () => {
     }
 
     // Connect to game service
-    const gameSocketInstance = io(config.api.wsUrl);
+    const gameSocketInstance = io(config.api.wsUrl, {
+      path: '/game/socket.io/'
+    });
     setGameSocket(gameSocketInstance);
 
     // Connect to chat service
-    const chatSocketInstance = io(config.api.chatService);
+    const chatSocketInstance = io(config.api.chatService, {
+      path: '/chat/socket.io/'
+    });
     setChatSocket(chatSocketInstance);
 
     // Game socket event listeners
