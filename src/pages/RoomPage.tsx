@@ -71,13 +71,10 @@ const RoomPage = () => {
 
     // Connect to chat service
     const chatSocketInstance = io(config.api.chatService, {
-      transports: ['websocket', 'polling'],
-      upgrade: true,
-      rememberUpgrade: true,
-      timeout: 20000,
+      transports: ['websocket'],
+      upgrade: false,
       forceNew: true,
       autoConnect: true,
-      path: '/socket.io/', // Ensure path matches server
     });
     setChatSocket(chatSocketInstance);
 
