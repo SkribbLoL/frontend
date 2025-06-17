@@ -10,7 +10,8 @@ const config = {
     baseUrl: `http://localhost/game`,
     wsUrl: `ws://localhost/game`, // Game service websocket
     drawingService: `http://localhost/drawing`,
-    chatService: `http://localhost/chat/socket.io/`, // Chat service websocket with full path
+    // chatService: `http://localhost/chat/socket.io/`, // Chat service websocket with full path
+    chatService: `http://localhost/chat`, // Chat service websocket with full path
   },
   
   // Docker Compose configuration - direct service communication
