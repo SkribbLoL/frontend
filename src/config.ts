@@ -8,9 +8,9 @@ const config = {
   api: {
     // For Kubernetes, services are accessed through ingress routes
     baseUrl: `http://localhost/game`,
-    wsUrl: `http://localhost/game`,
+    wsUrl: `ws://localhost/game`, // Game service websocket
     drawingService: `http://localhost/drawing`,
-    chatService: `http://localhost/chat`,
+    chatService: `http://localhost/chat/socket.io/`, // Chat service websocket with full path
   },
   
   // Docker Compose configuration - direct service communication
