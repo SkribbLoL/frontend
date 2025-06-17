@@ -15,13 +15,13 @@ const config = {
     // For Kubernetes, services are accessed through ingress routes
     baseUrl: `http://localhost/game`,
     wsUrl: {
-      url: `http://localhost/game`,
-      path: `/game/socket.io/`,
+      url: `http://localhost`, // Base URL without /game prefix for Socket.IO
+      path: `/game/socket.io/`, // Full path including /game prefix
       namespace: '/game'
-    }, // Game service websocket
+    },
     drawingService: {
-      url: `http://localhost/drawing`,
-      path: `/drawing/socket.io/`,
+      url: `http://localhost`, // Base URL without /drawing prefix
+      path: `/drawing/socket.io/`, // Full path including /drawing prefix
       namespace: '/drawing'
     },
     // Fixed chat service configuration for Socket.IO

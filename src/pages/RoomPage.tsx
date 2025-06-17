@@ -67,11 +67,15 @@ const RoomPage = () => {
 
     // Connect to game service
     const gameSocketInstance = io(config.api.wsUrl.namespace, {
+      // Use the correct base URL and path
+      forceNew: true,
       path: config.api.wsUrl.path,
-      transports: ['websocket', 'polling'], // Allow fallback to polling
-      upgrade: true, // Allow upgrade to websocket
+      transports: ['polling'], // Start with polling only
       timeout: 20000,
       autoConnect: false, // Connect manually when needed
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     });
     setGameSocket(gameSocketInstance);
 
