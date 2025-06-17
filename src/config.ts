@@ -3,6 +3,12 @@
  */
 
 // Kubernetes/Production configuration - Traefik ingress routing
+
+/**
+ * Application configuration
+ */
+
+// Kubernetes/Production configuration - Traefik ingress routing
 const config = {
   // API endpoints
   api: {
@@ -10,8 +16,12 @@ const config = {
     baseUrl: `http://localhost/game`,
     wsUrl: `ws://localhost/game`, // Game service websocket
     drawingService: `http://localhost/drawing`,
-    // chatService: `http://localhost/chat/socket.io/`, // Chat service websocket with full path
-    chatService: `ws://localhost:31887/chat`, // Chat service websocket with full path
+    // Fixed chat service configuration for Socket.IO
+    chatService: {
+      url: `http://localhost`, // Base URL without /chat
+      path: `/chat/socket.io/`, // Socket.IO path with namespace prefix
+      namespace: '/chat' // Namespace for Socket.IO
+    }
   },
   
   // Docker Compose configuration - direct service communication
