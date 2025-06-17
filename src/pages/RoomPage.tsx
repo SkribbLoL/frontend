@@ -72,16 +72,15 @@ const RoomPage = () => {
       chatPath: config.api.chatService.path
     });
 
-    // Connect to game service with correct Socket.IO syntax
-    const gameSocketInstance = io(`${config.api.wsUrl.url}${config.api.wsUrl.namespace}`, {
-      path: config.api.wsUrl.path,
-      transports: ['polling'], // Start with polling only
-      timeout: 20000,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      forceNew: true
+    // Initialize game socket
+    const gameSocketInstance = io(`http://localhost/game`, {
+      path: '/game/socket.io/',
+      transports: ['polling', 'websocket'], // Enable both transports
+      autoConnect: true,
+      forceNew: true,
     });
+
+    console.log('🔗 Game socket connecting to:', `http://localhost/game`);
     setGameSocket(gameSocketInstance);
 
     // Connect to chat service with correct Socket.IO syntax  

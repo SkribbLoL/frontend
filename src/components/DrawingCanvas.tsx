@@ -4,7 +4,6 @@ import { Button } from './ui/button';
 import WordSelection from './WordSelection';
 import Timer from './Timer';
 import GameEndScreen from './GameEndScreen';
-import config from '../config';
 
 interface DrawingCanvasProps {
   roomCode: string;
@@ -232,64 +231,73 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
   // Initialize drawing socket connection
   useEffect(() => {
-    const socket = io(config.api.drawingService);
-    setDrawingSocket(socket);
+    if (!roomCode || !userId || !isGameStarted) return;
 
-    socket.on('connect', () => {
+    console.log('🎨 Initializing drawing socket...');
+    const drawingSocketInstance = io(`http://localhost/drawing`, {
+      path: '/drawing/socket.io/',
+      transports: ['polling', 'websocket'], // Enable both transports
+      autoConnect: true,
+      forceNew: true,
+    });
+
+    setDrawingSocket(drawingSocketInstance);
+
+    drawingSocketInstance.on('connect', () => {
       console.log('Connected to drawing service');
       setIsConnected(true);
       
       // Join the drawing room
-      socket.emit('join-drawing-room', {
+      drawingSocketInstance.emit('join-drawing-room', {
         roomCode,
         userId,
         username
       });
     });
 
-    socket.on('disconnect', () => {
+    drawingSocketInstance.on('disconnect', () => {
       console.log('Disconnected from drawing service');
       setIsConnected(false);
     });
 
-    socket.on('error', (data: SocketErrorData) => {
+    drawingSocketInstance.on('error', (data: SocketErrorData) => {
       console.error('Drawing socket error:', data.message);
     });
 
     // Canvas state management
-    socket.on('canvas-state', (data: CanvasStateData) => {
+    drawingSocketInstance.on('canvas-state', (data: CanvasStateData) => {
       console.log('Received canvas state:', data);
       redrawCanvas(data.drawings);
     });
 
-    socket.on('canvas-cleared', () => {
+    drawingSocketInstance.on('canvas-cleared', () => {
       console.log('Canvas cleared');
       clearCanvas();
     });
 
     // Drawing events from other players
-    socket.on('draw-start', (data: DrawingData & { userId: string }) => {
+    drawingSocketInstance.on('draw-start', (data: DrawingData & { userId: string }) => {
       if (data.userId !== userId) {
         startRemoteDrawing(data);
       }
     });
 
-    socket.on('draw-move', (data: DrawingData & { userId: string }) => {
+    drawingSocketInstance.on('draw-move', (data: DrawingData & { userId: string }) => {
       if (data.userId !== userId) {
         continueRemoteDrawing(data);
       }
     });
 
-    socket.on('draw-end', (data: { userId: string }) => {
+    drawingSocketInstance.on('draw-end', (data: { userId: string }) => {
       if (data.userId !== userId) {
         endRemoteDrawing();
       }
     });
 
     return () => {
-      socket.disconnect();
+      drawingSocketInstance.disconnect();
     };
-  }, [roomCode, userId, username]);
+  }, [roomCode, userId, username, isGameStarted]);
 
   const getCanvas = useCallback(() => {
     return canvasRef.current;
