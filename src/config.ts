@@ -14,8 +14,16 @@ const config = {
   api: {
     // For Kubernetes, services are accessed through ingress routes
     baseUrl: `http://localhost/game`,
-    wsUrl: `ws://localhost/game`, // Game service websocket
-    drawingService: `http://localhost/drawing`,
+    wsUrl: {
+      url: `http://localhost/game`,
+      path: `/game/socket.io/`,
+      namespace: '/game'
+    }, // Game service websocket
+    drawingService: {
+      url: `http://localhost/drawing`,
+      path: `/drawing/socket.io/`,
+      namespace: '/drawing'
+    },
     // Fixed chat service configuration for Socket.IO
     chatService: {
       url: `http://localhost`, // Base URL without /chat
