@@ -65,32 +65,42 @@ const RoomPage = () => {
       return;
     }
 
-    // Connect to game service
-    const gameSocketInstance = io(config.api.wsUrl.namespace, {
-      // Use the correct base URL and path
-      forceNew: true,
+    console.log('🔍 Connecting with config:', {
+      gameUrl: `${config.api.wsUrl.url}${config.api.wsUrl.namespace}`,
+      gamePath: config.api.wsUrl.path,
+      chatUrl: `${config.api.chatService.url}${config.api.chatService.namespace}`,
+      chatPath: config.api.chatService.path
+    });
+
+    // Connect to game service with correct Socket.IO syntax
+    const gameSocketInstance = io(`${config.api.wsUrl.url}${config.api.wsUrl.namespace}`, {
       path: config.api.wsUrl.path,
       transports: ['polling'], // Start with polling only
       timeout: 20000,
-      autoConnect: false, // Connect manually when needed
       reconnection: true,
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
+      forceNew: true
     });
     setGameSocket(gameSocketInstance);
 
-    // Connect to chat service
-    const chatSocketInstance = io(config.api.chatService.namespace, {
-      // Use the base URL and custom path
-      forceNew: true,
+    // Connect to chat service with correct Socket.IO syntax  
+    const chatSocketInstance = io(`${config.api.chatService.url}${config.api.chatService.namespace}`, {
       path: config.api.chatService.path,
-      transports: ['websocket', 'polling'], // Allow fallback to polling
-      upgrade: true, // Allow upgrade to websocket
+      transports: ['polling'], // Start with polling only for consistency
       timeout: 20000,
-      autoConnect: false, // Connect manually when needed
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      forceNew: true
     });
     
     setChatSocket(chatSocketInstance);
+
+    // Manually connect the sockets
+    console.log('🚀 Manually connecting sockets...');
+    gameSocketInstance.connect();
+    chatSocketInstance.connect();
 
     // Game socket event listeners
     gameSocketInstance.on('connect', () => {
