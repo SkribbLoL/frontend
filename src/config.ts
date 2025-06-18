@@ -1,49 +1,29 @@
-
 /**
  * Application configuration
  */
 
-// Kubernetes/Production configuration - Traefik ingress routing
-
-/**
- * Application configuration
- */
-
-// Kubernetes/Production configuration - Traefik ingress routing
 const config = {
   // API endpoints
   api: {
     // For Kubernetes, services are accessed through ingress routes
-    baseUrl: `http://${process.env.VITE_API_URL}/game`,
+    baseUrl: `${window.location.protocol}//${window.location.hostname}/game`,
     wsUrl: {
-      url: `http://${process.env.VITE_API_URL}`, // Base URL without /game prefix for Socket.IO
-      path: `/game/socket.io/`, // Full path including /game prefix
+      url: `${window.location.protocol}//${window.location.hostname}`,
+      path: `/game/socket.io/`,
       namespace: '/game'
     },
     drawingService: {
-      url: `http://${process.env.VITE_API_URL}`, // Base URL without /drawing prefix
-      path: `/drawing/socket.io/`, // Full path including /drawing prefix
+      url: `${window.location.protocol}//${window.location.hostname}`,
+      path: `/drawing/socket.io/`,
       namespace: '/drawing'
     },
     // Fixed chat service configuration for Socket.IO
     chatService: {
-      url: `http://${process.env.VITE_API_URL}`, // Base URL without /chat
-      path: `/chat/socket.io/`, // Socket.IO path with namespace prefix
+      url: `${window.location.protocol}//${window.location.hostname}`,
+      path: `/chat/socket.io/`,
       namespace: '/chat' // Namespace for Socket.IO
     }
   },
-  
-  // Docker Compose configuration - direct service communication
-  // Uncomment below and comment above for Docker Compose usage
-  /*
-  api: {
-    // For Docker Compose, services are exposed on different ports
-    baseUrl: `http://localhost:5000`,
-    wsUrl: `http://localhost:5000`,
-    drawingService: `http://localhost:5001`,
-    chatService: `http://localhost:5002`,
-  },
-  */
   
   // Game settings
   game: {
@@ -53,4 +33,4 @@ const config = {
   }
 };
 
-export default config; 
+export default config;
