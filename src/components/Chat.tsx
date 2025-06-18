@@ -80,6 +80,12 @@ const Chat: React.FC<ChatProps> = ({
       setMessages(prev => [...prev, newMessage]);
     };
 
+    const handleNewRound = () => {
+      console.log('New round started, clearing chat');
+      // Clear all messages when new round starts
+      setMessages([]);
+    };
+
     const handleUserJoinedChat = (data: {
       userId: string;
       username: string;
@@ -118,6 +124,7 @@ const Chat: React.FC<ChatProps> = ({
     socket.on('chat-history', handleChatHistory);
     socket.on('chat-message', handleChatMessage);
     socket.on('game-mode-changed', handleGameModeChanged);
+    socket.on('new-round', handleNewRound);
     socket.on('user-joined-chat', handleUserJoinedChat);
     socket.on('user-left-chat', handleUserLeftChat);
 
@@ -125,6 +132,7 @@ const Chat: React.FC<ChatProps> = ({
       socket.off('chat-history', handleChatHistory);
       socket.off('chat-message', handleChatMessage);
       socket.off('game-mode-changed', handleGameModeChanged);
+      socket.off('new-round', handleNewRound);
       socket.off('user-joined-chat', handleUserJoinedChat);
       socket.off('user-left-chat', handleUserLeftChat);
     };
@@ -159,7 +167,7 @@ const Chat: React.FC<ChatProps> = ({
 
   const getMessageStyle = (message: Message) => {
     if (message.type === 'correct-guess') {
-      return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-900 text-center font-bold border-2 border-green-400 shadow-lg transform scale-105 animate-bounce';
+      return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-900 text-center font-bold border-2 border-green-400 shadow-md';
     }
     if (message.type === 'system') {
       return 'bg-blue-50 text-blue-800 text-center italic';
@@ -186,7 +194,7 @@ const Chat: React.FC<ChatProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 min-h-0">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1 min-h-0 max-h-full">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground text-sm py-8">
             <p>Welcome to the chat!</p>
@@ -194,10 +202,10 @@ const Chat: React.FC<ChatProps> = ({
           </div>
         )}
         {messages.map((message) => (
-          <div key={message.id} className={`p-2 rounded-lg transition-colors ${getMessageStyle(message)}`}>
+          <div key={message.id} className={`p-2 rounded-md transition-colors ${getMessageStyle(message)}`}>
             {message.type !== 'system' && message.type !== 'correct-guess' && (
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-xs font-medium text-foreground">
                   {message.username}
                   {message.userId === userId && (
                     <span className="ml-1 text-xs text-muted-foreground">(You)</span>
@@ -208,9 +216,9 @@ const Chat: React.FC<ChatProps> = ({
                 </span>
               </div>
             )}
-            <div className="text-sm text-foreground break-words">
+            <div className="text-xs text-foreground break-words">
               {message.type === 'correct-guess' ? (
-                <div className="text-lg font-extrabold text-green-800 py-1">
+                <div className="text-sm font-extrabold text-green-800 py-0.5">
                   {message.message}
                 </div>
               ) : (
@@ -218,7 +226,7 @@ const Chat: React.FC<ChatProps> = ({
               )}
             </div>
             {message.type === 'guess' && isGameStarted && (
-              <div className="text-xs text-yellow-600 mt-1">
+              <div className="text-xs text-yellow-600 mt-0.5">
                 💭 Guess
               </div>
             )}
