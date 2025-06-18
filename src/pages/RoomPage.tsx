@@ -73,6 +73,7 @@ const RoomPage = () => {
     });
 
     // Initialize game socket
+    console.log('🔗 Game socket connecting to:AKLSNFLKNASFNASN', `${config.api.wsUrl.url}${config.api.wsUrl.namespace}`);
     const gameSocketInstance = io(`${config.api.wsUrl.url}${config.api.wsUrl.namespace}`, {
       path: config.api.wsUrl.path,
       transports: ['polling', 'websocket'], // Enable both transports
