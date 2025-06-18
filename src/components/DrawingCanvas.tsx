@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import WordSelection from './WordSelection';
 import Timer from './Timer';
 import GameEndScreen from './GameEndScreen';
+import config from '@/config';
 
 interface DrawingCanvasProps {
   roomCode: string;
@@ -234,8 +235,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (!roomCode || !userId || !isGameStarted) return;
 
     console.log('🎨 Initializing drawing socket...');
-    const drawingSocketInstance = io(`http://localhost/drawing`, {
-      path: '/drawing/socket.io/',
+    const drawingSocketInstance = io(`${config.api.drawingService.url}${config.api.drawingService.namespace}`, {
+      path: config.api.drawingService.path,
       transports: ['polling', 'websocket'], // Enable both transports
       autoConnect: true,
       forceNew: true,
