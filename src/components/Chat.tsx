@@ -8,7 +8,7 @@ interface Message {
   username: string;
   message: string;
   timestamp: number;
-  type: 'message' | 'system' | 'guess';
+  type: 'message' | 'system' | 'guess' | 'correct-guess';
 }
 
 interface ChatProps {
@@ -93,9 +93,9 @@ const Chat: React.FC<ChatProps> = ({
         id: `correct-${Date.now()}-${data.userId}`,
         userId: 'system',
         username: 'System',
-        message: data.message || `${data.username} guessed "${data.word}" correctly! (+${data.points} points)`,
+        message: data.message || `🎉 ${data.username} got it! The word was "${data.word}" (+${data.points} pts)`,
         timestamp: Date.now(),
-        type: 'system'
+        type: 'correct-guess'
       };
 
       setMessages(prev => [...prev, newMessage]);
@@ -181,6 +181,9 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   const getMessageStyle = (message: Message) => {
+    if (message.type === 'correct-guess') {
+      return 'bg-green-100 text-green-800 text-center font-medium border-2 border-green-300 animate-pulse';
+    }
     if (message.type === 'system') {
       return 'bg-blue-50 text-blue-800 text-center italic';
     }
@@ -215,7 +218,7 @@ const Chat: React.FC<ChatProps> = ({
         )}
         {messages.map((message) => (
           <div key={message.id} className={`p-2 rounded-lg transition-colors ${getMessageStyle(message)}`}>
-            {message.type !== 'system' && (
+            {message.type !== 'system' && message.type !== 'correct-guess' && (
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-foreground">
                   {message.username}

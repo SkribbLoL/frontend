@@ -300,9 +300,48 @@ const RoomPage = () => {
     }
   }, [chatSocket, room, userId, roomCode]);
 
-  const handleCopyRoomCode = () => {
-    navigator.clipboard.writeText(roomCode || '');
-    setCopySuccess('Copied!');
+  const handleCopyRoomCode = async () => {
+    if (!roomCode) {
+      setCopySuccess('Error: No room code');
+      setTimeout(() => setCopySuccess(''), 2000);
+      return;
+    }
+
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(roomCode);
+        setCopySuccess('Copied!');
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = roomCode;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          setCopySuccess('Copied!');
+        } else {
+          throw new Error('Copy command failed');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to copy room code:', err);
+      setCopySuccess('Copy failed');
+      
+      // Show the room code in an alert as last resort
+      setTimeout(() => {
+        alert(`Room code: ${roomCode}\n\nPlease copy this manually.`);
+      }, 100);
+    }
+    
     setTimeout(() => setCopySuccess(''), 2000);
   };
 
@@ -388,12 +427,29 @@ const RoomPage = () => {
                 <span className="text-sm text-muted-foreground mr-2">Invite friends:</span>
                 <button
                   onClick={handleCopyRoomCode}
-                  className="px-3 py-1 text-sm bg-secondary rounded-md hover:bg-secondary/80 transition-colors flex items-center"
+                  className={`px-3 py-1 text-sm rounded-md transition-all duration-200 flex items-center gap-1 ${
+                    copySuccess === 'Copied!' 
+                      ? 'bg-green-100 text-green-700 border border-green-300' 
+                      : copySuccess?.includes('Error') || copySuccess?.includes('failed')
+                        ? 'bg-red-100 text-red-700 border border-red-300'
+                        : 'bg-secondary hover:bg-secondary/80 text-foreground border border-border hover:border-primary'
+                  }`}
                 >
-                  {copySuccess ? (
-                    <span className="text-green-600">Copied!</span>
+                  {copySuccess === 'Copied!' ? (
+                    <>
+                      <span>✓</span>
+                      <span>Copied!</span>
+                    </>
+                  ) : copySuccess?.includes('Error') || copySuccess?.includes('failed') ? (
+                    <>
+                      <span>✗</span>
+                      <span>{copySuccess}</span>
+                    </>
                   ) : (
-                    <span>Copy Room Code</span>
+                    <>
+                      <span>📋</span>
+                      <span>Copy Room Code</span>
+                    </>
                   )}
                 </button>
               </div>
