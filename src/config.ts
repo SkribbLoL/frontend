@@ -1,3 +1,4 @@
+
 /**
  * Application configuration
  */
@@ -13,20 +14,20 @@ const config = {
   // API endpoints
   api: {
     // For Kubernetes, services are accessed through ingress routes
-    baseUrl: `http://localhost/game`,
+    baseUrl: `http://${process.env.VITE_API_URL}/game`,
     wsUrl: {
-      url: `http://localhost`, // Base URL without /game prefix for Socket.IO
+      url: `http://${process.env.VITE_API_URL}`, // Base URL without /game prefix for Socket.IO
       path: `/game/socket.io/`, // Full path including /game prefix
       namespace: '/game'
     },
     drawingService: {
-      url: `http://localhost`, // Base URL without /drawing prefix
+      url: `http://${process.env.VITE_API_URL}`, // Base URL without /drawing prefix
       path: `/drawing/socket.io/`, // Full path including /drawing prefix
       namespace: '/drawing'
     },
     // Fixed chat service configuration for Socket.IO
     chatService: {
-      url: `http://localhost`, // Base URL without /chat
+      url: `http://${process.env.VITE_API_URL}`, // Base URL without /chat
       path: `/chat/socket.io/`, // Socket.IO path with namespace prefix
       namespace: '/chat' // Namespace for Socket.IO
     }
