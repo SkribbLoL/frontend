@@ -563,14 +563,16 @@ const RoomPage = () => {
 
           {/* Chat Panel - Right Side */}
           <aside className="lg:col-span-1">
-            <Chat
-              roomCode={roomCode!}
-              userId={userId!}
-              username={currentUserNickname}
-              isGameStarted={room.gameStarted}
-              socket={chatSocket}
-              gameSocket={gameSocket}
-            />
+            <div className="h-full">
+              <Chat
+                roomCode={roomCode!}
+                userId={userId!}
+                username={currentUserNickname}
+                isGameStarted={room.gameStarted}
+                socket={chatSocket}
+                gameSocket={gameSocket}
+              />
+            </div>
           </aside>
         </div>
       </div>

@@ -205,6 +205,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setRoundEndTime(null);
       setWordOptions([]);
       setIsLoadingNewRound(false);
+      
+      // Clear the canvas when game restarts
+      clearCanvas();
     };
 
     const handleCorrectGuess = (data: {

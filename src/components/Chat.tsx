@@ -32,7 +32,21 @@ const Chat: React.FC<ChatProps> = ({
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }
+    };
+    
+    // Scroll immediately if there are messages
+    if (messages.length > 0) {
+      // Use a small delay to ensure the DOM has updated
+      const timeoutId = setTimeout(scrollToBottom, 50);
+      return () => clearTimeout(timeoutId);
+    }
   }, [messages]);
 
   // Socket event listeners
@@ -88,6 +102,12 @@ const Chat: React.FC<ChatProps> = ({
       setMessages([]);
     };
 
+    const handleGameRestarted = () => {
+      console.log('Game restarted, clearing chat');
+      // Clear all messages when game restarts
+      setMessages([]);
+    };
+
     const handleUserJoinedChat = (data: {
       userId: string;
       username: string;
@@ -127,6 +147,7 @@ const Chat: React.FC<ChatProps> = ({
     socket.on('chat-message', handleChatMessage);
     socket.on('game-mode-changed', handleGameModeChanged);
     socket.on('new-round', handleNewRound);
+    socket.on('game-restarted', handleGameRestarted);
     socket.on('user-joined-chat', handleUserJoinedChat);
     socket.on('user-left-chat', handleUserLeftChat);
 
@@ -135,6 +156,7 @@ const Chat: React.FC<ChatProps> = ({
       socket.off('chat-message', handleChatMessage);
       socket.off('game-mode-changed', handleGameModeChanged);
       socket.off('new-round', handleNewRound);
+      socket.off('game-restarted', handleGameRestarted);
       socket.off('user-joined-chat', handleUserJoinedChat);
       socket.off('user-left-chat', handleUserLeftChat);
     };
@@ -149,10 +171,17 @@ const Chat: React.FC<ChatProps> = ({
       setMessages([]);
     };
 
+    const handleGameRestarted = () => {
+      console.log('Game restarted from game service, clearing chat');
+      setMessages([]);
+    };
+
     gameSocket.on('new-round', handleGameNewRound);
+    gameSocket.on('game-restarted', handleGameRestarted);
 
     return () => {
       gameSocket.off('new-round', handleGameNewRound);
+      gameSocket.off('game-restarted', handleGameRestarted);
     };
   }, [gameSocket]);
 
@@ -165,6 +194,16 @@ const Chat: React.FC<ChatProps> = ({
     });
 
     setInputMessage('');
+    
+    // Force scroll to bottom after sending message
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -212,7 +251,7 @@ const Chat: React.FC<ChatProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1 min-h-0 max-h-full">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100" style={{maxHeight: '400px'}}>
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground text-sm py-8">
             <p>Welcome to the chat!</p>
