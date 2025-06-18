@@ -13,6 +13,8 @@ const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCreateRoom = async () => {
+    console.log('Creating room with URL:', `${config.api.baseUrl}/rooms`);
+
     if (!nickname.trim()) {
       setError('Please enter a nickname');
       return;
