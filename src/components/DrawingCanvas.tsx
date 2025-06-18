@@ -56,7 +56,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   currentDrawer,
   users,
   socket,
-  room,
+  room
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawingSocket, setDrawingSocket] = useState<Socket | null>(null);

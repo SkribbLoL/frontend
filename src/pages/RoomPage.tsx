@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { Button } from '../components/ui/button';
@@ -57,6 +57,9 @@ const RoomPage = () => {
   const [copySuccess, setCopySuccess] = useState('');
   const [startingGame, setStartingGame] = useState(false);
   const [gameStartError, setGameStartError] = useState<string>('');
+  
+  // Ref to track copy timeout
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Make sure roomCode and userId are available
@@ -275,6 +278,11 @@ const RoomPage = () => {
         chatSocketInstance.off('error');
         chatSocketInstance.disconnect();
       }
+      
+      // Clean up copy timeout
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
     };
   }, [roomCode, userId]);
 
@@ -303,7 +311,12 @@ const RoomPage = () => {
   const handleCopyRoomCode = async () => {
     if (!roomCode) {
       setCopySuccess('Error: No room code');
-      setTimeout(() => setCopySuccess(''), 2000);
+      // Clear any existing timeout
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+      // Set new timeout
+      copyTimeoutRef.current = setTimeout(() => setCopySuccess(''), 2000);
       return;
     }
 
@@ -312,7 +325,6 @@ const RoomPage = () => {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(roomCode);
         setCopySuccess('Copied!');
-        setTimeout(() => setCopySuccess(''), 2000);
       } else {
         // Fallback for older browsers or non-secure contexts
         const textArea = document.createElement('textarea');
@@ -329,7 +341,6 @@ const RoomPage = () => {
         
         if (successful) {
           setCopySuccess('Copied!');
-          setTimeout(() => setCopySuccess(''), 2000);
         } else {
           throw new Error('Copy command failed');
         }
@@ -342,9 +353,14 @@ const RoomPage = () => {
       setTimeout(() => {
         alert(`Room code: ${roomCode}\n\nPlease copy this manually.`);
       }, 100);
-      
-      setTimeout(() => setCopySuccess(''), 2000);
     }
+    
+    // Clear any existing timeout
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+    }
+    // Set new timeout to clear the message
+    copyTimeoutRef.current = setTimeout(() => setCopySuccess(''), 2000);
   };
 
   const handleLeaveRoom = () => {
