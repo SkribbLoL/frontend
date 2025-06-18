@@ -21,7 +21,6 @@ interface DrawingCanvasProps {
     roundDuration?: number;
     gamePhase?: string;
   } | null;
-  roundTransitionCountdown?: number | null;
 }
 
 interface DrawingData {
@@ -58,7 +57,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   users,
   socket,
   room,
-  roundTransitionCountdown
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawingSocket, setDrawingSocket] = useState<Socket | null>(null);
@@ -566,16 +564,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
             duration={roundDuration}
             onTimeUp={handleTimeUp}
           />
-        )}
-
-        {/* Round Transition Countdown */}
-        {roundTransitionCountdown && (
-          <div className="mt-3 text-center">
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-lg border border-green-300">
-              <span className="animate-spin">⏳</span>
-              <span className="font-medium">Next round starting in {roundTransitionCountdown}s...</span>
-            </div>
-          </div>
         )}
 
         {/* Word Display for Guessers */}
