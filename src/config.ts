@@ -6,20 +6,20 @@ const config = {
   // API endpoints
   api: {
     // For Kubernetes, services are accessed through ingress routes
-    baseUrl: `${window.location.protocol}//${window.location.hostname}/game`,
+    baseUrl: `http://veljkoskrbic.com/game`,
     wsUrl: {
-      url: `${window.location.protocol}//${window.location.hostname}`,
+      url: `http://veljkoskrbic.com`,
       path: `/game/socket.io/`,
       namespace: '/game'
     },
     drawingService: {
-      url: `${window.location.protocol}//${window.location.hostname}`,
+      url: `http://veljkoskrbic.com`,
       path: `/drawing/socket.io/`,
       namespace: '/drawing'
     },
     // Fixed chat service configuration for Socket.IO
     chatService: {
-      url: `${window.location.protocol}//${window.location.hostname}`,
+      url: `http://veljkoskrbic.com`,
       path: `/chat/socket.io/`,
       namespace: '/chat' // Namespace for Socket.IO
     }
