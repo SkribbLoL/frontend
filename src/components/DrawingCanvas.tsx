@@ -78,6 +78,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   // Game end state
   const [gameEndData, setGameEndData] = useState<{
     winner: { nickname: string; score: number };
+    winners?: Array<{ nickname: string; score: number }>;
     finalScores: Array<{ id: string; nickname: string; score: number }>;
   } | null>(null);
 
@@ -143,6 +144,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
     const handleGameEnded = (data: {
       winner: { nickname: string; score: number };
+      winners?: Array<{ nickname: string; score: number }>;
       finalScores: Array<{ id: string; nickname: string; score: number }>;
       message: string;
     }) => {
@@ -150,6 +152,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setGamePhase('game-end');
       setGameEndData({
         winner: data.winner,
+        winners: data.winners || [data.winner], // Use winners array if available, fallback to single winner
         finalScores: data.finalScores
       });
       setCurrentWord('');
@@ -516,6 +519,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     return (
       <GameEndScreen
         winner={gameEndData.winner}
+        winners={gameEndData.winners}
         finalScores={gameEndData.finalScores}
         isHost={currentUser?.isHost || false}
         onPlayAgain={handlePlayAgain}
