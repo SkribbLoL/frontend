@@ -555,6 +555,7 @@ const RoomPage = () => {
                 currentDrawer={room.currentDrawer}
                 users={room.users}
                 socket={gameSocket}
+                chatSocket={chatSocket}
                 room={room}
               />
             </div>

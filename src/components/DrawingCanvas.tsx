@@ -14,6 +14,7 @@ interface DrawingCanvasProps {
   currentDrawer: string | null;
   users: Array<{ id: string; nickname: string; isHost: boolean; score: number; joinedAt: number }>;
   socket: Socket | null;
+  chatSocket?: Socket | null;
   room: {
     currentRound?: number;
     rounds?: number;
@@ -56,6 +57,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   currentDrawer,
   users,
   socket,
+  chatSocket,
   room
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -548,7 +550,18 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   };
 
   const handleReturnToLobby = () => {
-    window.location.href = '/';
+    // Properly leave both game and chat rooms before redirecting
+    if (socket) {
+      socket.emit('leave-room');
+    }
+    if (chatSocket) {
+      chatSocket.emit('leave-chat-room');
+    }
+    
+    // Small delay to ensure the leave events are sent before redirect
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   // Show loading new round screen when someone guessed correctly
