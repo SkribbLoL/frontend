@@ -57,6 +57,7 @@ const RoomPage = () => {
   const [copySuccess, setCopySuccess] = useState('');
   const [startingGame, setStartingGame] = useState(false);
   const [gameStartError, setGameStartError] = useState<string>('');
+  const [roundTransitionCountdown, setRoundTransitionCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     // Make sure roomCode and userId are available
@@ -190,6 +191,18 @@ const RoomPage = () => {
           })
         };
       });
+
+      // Start 5-second countdown for next round
+      setRoundTransitionCountdown(5);
+      const countdownInterval = setInterval(() => {
+        setRoundTransitionCountdown(prev => {
+          if (prev === null || prev <= 1) {
+            clearInterval(countdownInterval);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     });
 
     gameSocketInstance.on('game-ended', (data: {
@@ -208,6 +221,7 @@ const RoomPage = () => {
     }) => {
       console.log('New round:', data);
       setRoom(data.room);
+      setRoundTransitionCountdown(null); // Reset countdown when new round starts
     });
 
     gameSocketInstance.on('game-restarted', (data: {
@@ -312,6 +326,7 @@ const RoomPage = () => {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(roomCode);
         setCopySuccess('Copied!');
+        setTimeout(() => setCopySuccess(''), 2000);
       } else {
         // Fallback for older browsers or non-secure contexts
         const textArea = document.createElement('textarea');
@@ -328,6 +343,7 @@ const RoomPage = () => {
         
         if (successful) {
           setCopySuccess('Copied!');
+          setTimeout(() => setCopySuccess(''), 2000);
         } else {
           throw new Error('Copy command failed');
         }
@@ -340,9 +356,9 @@ const RoomPage = () => {
       setTimeout(() => {
         alert(`Room code: ${roomCode}\n\nPlease copy this manually.`);
       }, 100);
+      
+      setTimeout(() => setCopySuccess(''), 2000);
     }
-    
-    setTimeout(() => setCopySuccess(''), 2000);
   };
 
   const handleLeaveRoom = () => {
@@ -538,6 +554,7 @@ const RoomPage = () => {
                 users={room.users}
                 socket={gameSocket}
                 room={room}
+                roundTransitionCountdown={roundTransitionCountdown}
               />
             </div>
           </main>
