@@ -74,6 +74,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [gamePhase, setGamePhase] = useState<string>('waiting'); // waiting, word-selection, drawing, round-end, game-end
   const [roundEndTime, setRoundEndTime] = useState<number | null>(null);
   const [roundDuration, setRoundDuration] = useState<number>(60);
+  const [isLoadingNewRound, setIsLoadingNewRound] = useState(false);
+  const [newRoundCountdown, setNewRoundCountdown] = useState(5);
   
   // Game end state
   const [gameEndData, setGameEndData] = useState<{
@@ -177,6 +179,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setWordDisplay('');
       setShowWordSelection(false);
       setRoundEndTime(null);
+      setIsLoadingNewRound(false); // Clear loading state when new round starts
     };
 
     const handleGameRestarted = (data: {
@@ -199,6 +202,38 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setShowWordSelection(false);
       setRoundEndTime(null);
       setWordOptions([]);
+      setIsLoadingNewRound(false);
+    };
+
+    const handleCorrectGuess = (data: {
+      userId: string;
+      username: string;
+      word: string;
+      points: number;
+      totalScore: number;
+      message: string;
+    }) => {
+      console.log('Correct guess detected:', data);
+      // Start loading new round state with countdown
+      setIsLoadingNewRound(true);
+      setNewRoundCountdown(5);
+      setGamePhase('round-end');
+      
+      // Start countdown
+      const countdownInterval = setInterval(() => {
+        setNewRoundCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Auto-hide after 5 seconds if new round hasn't started yet
+      setTimeout(() => {
+        setIsLoadingNewRound(false);
+      }, 5500);
     };
 
     // Canvas clearing events from game service
@@ -218,6 +253,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     socket.on('game-ended', handleGameEnded);
     socket.on('new-round', handleNewRound);
     socket.on('game-restarted', handleGameRestarted);
+    socket.on('correct-guess', handleCorrectGuess);
     socket.on('clear-canvas-round', handleClearCanvasRound);
     socket.on('clear-canvas-game-end', handleClearCanvasGameEnd);
 
@@ -228,6 +264,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       socket.off('game-ended', handleGameEnded);
       socket.off('new-round', handleNewRound);
       socket.off('game-restarted', handleGameRestarted);
+      socket.off('correct-guess', handleCorrectGuess);
       socket.off('clear-canvas-round', handleClearCanvasRound);
       socket.off('clear-canvas-game-end', handleClearCanvasGameEnd);
     };
@@ -513,6 +550,26 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const handleReturnToLobby = () => {
     window.location.href = '/';
   };
+
+  // Show loading new round screen when someone guessed correctly
+  if (isLoadingNewRound) {
+    return (
+      <div className="relative aspect-video bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-950 dark:to-emerald-950 rounded-lg overflow-hidden flex flex-col items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-6xl animate-pulse">🎉</div>
+          <h2 className="text-2xl font-bold text-green-800 dark:text-green-200">
+            Correct Guess!
+          </h2>
+          <p className="text-lg text-green-700 dark:text-green-300">
+            Loading new round...
+          </p>
+          <div className="text-3xl font-bold text-green-800 dark:text-green-200">
+            {newRoundCountdown}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show game end screen when game is over (check this first!)
   if (gamePhase === 'game-end' && gameEndData) {

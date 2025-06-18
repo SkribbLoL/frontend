@@ -17,12 +17,14 @@ interface ChatProps {
   username: string;
   isGameStarted: boolean;
   socket: Socket | null;
+  gameSocket?: Socket | null;
 }
 
 const Chat: React.FC<ChatProps> = ({
   userId,
   isGameStarted,
-  socket
+  socket,
+  gameSocket
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -137,6 +139,22 @@ const Chat: React.FC<ChatProps> = ({
       socket.off('user-left-chat', handleUserLeftChat);
     };
   }, [socket]);
+
+  // Also listen to game socket for new-round events as backup
+  useEffect(() => {
+    if (!gameSocket) return;
+
+    const handleGameNewRound = () => {
+      console.log('New round from game service, clearing chat');
+      setMessages([]);
+    };
+
+    gameSocket.on('new-round', handleGameNewRound);
+
+    return () => {
+      gameSocket.off('new-round', handleGameNewRound);
+    };
+  }, [gameSocket]);
 
   const handleSendMessage = () => {
     if (!inputMessage.trim() || !socket) return;

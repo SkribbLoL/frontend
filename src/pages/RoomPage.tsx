@@ -568,6 +568,7 @@ const RoomPage = () => {
               username={currentUserNickname}
               isGameStarted={room.gameStarted}
               socket={chatSocket}
+              gameSocket={gameSocket}
             />
           </aside>
         </div>
