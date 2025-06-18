@@ -80,27 +80,6 @@ const Chat: React.FC<ChatProps> = ({
       setMessages(prev => [...prev, newMessage]);
     };
 
-    const handleCorrectGuessNotification = (data: {
-      userId: string;
-      username: string;
-      word: string;
-      points: number;
-      totalScore: number;
-      message?: string;
-    }) => {
-      console.log('Correct guess notification:', data);
-      const newMessage: Message = {
-        id: `correct-${Date.now()}-${data.userId}`,
-        userId: 'system',
-        username: 'System',
-        message: data.message || `🎉 ${data.username} got it! The word was "${data.word}" (+${data.points} pts)`,
-        timestamp: Date.now(),
-        type: 'correct-guess'
-      };
-
-      setMessages(prev => [...prev, newMessage]);
-    };
-
     const handleUserJoinedChat = (data: {
       userId: string;
       username: string;
@@ -139,7 +118,6 @@ const Chat: React.FC<ChatProps> = ({
     socket.on('chat-history', handleChatHistory);
     socket.on('chat-message', handleChatMessage);
     socket.on('game-mode-changed', handleGameModeChanged);
-    socket.on('correct-guess-notification', handleCorrectGuessNotification);
     socket.on('user-joined-chat', handleUserJoinedChat);
     socket.on('user-left-chat', handleUserLeftChat);
 
@@ -147,7 +125,6 @@ const Chat: React.FC<ChatProps> = ({
       socket.off('chat-history', handleChatHistory);
       socket.off('chat-message', handleChatMessage);
       socket.off('game-mode-changed', handleGameModeChanged);
-      socket.off('correct-guess-notification', handleCorrectGuessNotification);
       socket.off('user-joined-chat', handleUserJoinedChat);
       socket.off('user-left-chat', handleUserLeftChat);
     };
@@ -182,7 +159,7 @@ const Chat: React.FC<ChatProps> = ({
 
   const getMessageStyle = (message: Message) => {
     if (message.type === 'correct-guess') {
-      return 'bg-green-100 text-green-800 text-center font-medium border-2 border-green-300 animate-pulse';
+      return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-900 text-center font-bold border-2 border-green-400 shadow-lg transform scale-105 animate-bounce';
     }
     if (message.type === 'system') {
       return 'bg-blue-50 text-blue-800 text-center italic';
@@ -232,7 +209,13 @@ const Chat: React.FC<ChatProps> = ({
               </div>
             )}
             <div className="text-sm text-foreground break-words">
-              {message.message}
+              {message.type === 'correct-guess' ? (
+                <div className="text-lg font-extrabold text-green-800 py-1">
+                  {message.message}
+                </div>
+              ) : (
+                message.message
+              )}
             </div>
             {message.type === 'guess' && isGameStarted && (
               <div className="text-xs text-yellow-600 mt-1">
