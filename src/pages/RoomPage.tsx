@@ -85,6 +85,7 @@ const RoomPage = () => {
     });
 
     setGameSocket(gameSocketInstance);
+    console.log("dsa");
 
     // Connect to chat service with correct Socket.IO syntax  
     const chatSocketInstance = io(`${config.api.chatService.url}${config.api.chatService.namespace}`, {
