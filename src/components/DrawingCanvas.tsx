@@ -259,6 +259,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       clearCanvas();
     };
 
+    const handleForceClearCanvas = () => {
+      console.log('Force clear canvas event received');
+      clearCanvas();
+    };
+
     socket.on('word-options', handleWordOptions);
     socket.on('word-selected', handleWordSelected);
     socket.on('drawer-word', handleDrawerWord);
@@ -268,6 +273,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     socket.on('correct-guess', handleCorrectGuess);
     socket.on('clear-canvas-round', handleClearCanvasRound);
     socket.on('clear-canvas-game-end', handleClearCanvasGameEnd);
+    socket.on('force-clear-canvas', handleForceClearCanvas);
 
     return () => {
       socket.off('word-options', handleWordOptions);
@@ -279,6 +285,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       socket.off('correct-guess', handleCorrectGuess);
       socket.off('clear-canvas-round', handleClearCanvasRound);
       socket.off('clear-canvas-game-end', handleClearCanvasGameEnd);
+      socket.off('force-clear-canvas', handleForceClearCanvas);
     };
   }, [socket]);
 

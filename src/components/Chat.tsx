@@ -108,6 +108,12 @@ const Chat: React.FC<ChatProps> = ({
       setMessages([]);
     };
 
+    const handleForceClear = () => {
+      console.log('Force clear chat event received');
+      // Immediately clear all messages
+      setMessages([]);
+    };
+
     const handleUserJoinedChat = (data: {
       userId: string;
       username: string;
@@ -148,6 +154,7 @@ const Chat: React.FC<ChatProps> = ({
     socket.on('game-mode-changed', handleGameModeChanged);
     socket.on('new-round', handleNewRound);
     socket.on('game-restarted', handleGameRestarted);
+    socket.on('force-clear-chat', handleForceClear);
     socket.on('user-joined-chat', handleUserJoinedChat);
     socket.on('user-left-chat', handleUserLeftChat);
 
@@ -157,6 +164,7 @@ const Chat: React.FC<ChatProps> = ({
       socket.off('game-mode-changed', handleGameModeChanged);
       socket.off('new-round', handleNewRound);
       socket.off('game-restarted', handleGameRestarted);
+      socket.off('force-clear-chat', handleForceClear);
       socket.off('user-joined-chat', handleUserJoinedChat);
       socket.off('user-left-chat', handleUserLeftChat);
     };
@@ -176,12 +184,19 @@ const Chat: React.FC<ChatProps> = ({
       setMessages([]);
     };
 
+    const handleGameForceClear = () => {
+      console.log('Force clear from game service, clearing chat');
+      setMessages([]);
+    };
+
     gameSocket.on('new-round', handleGameNewRound);
     gameSocket.on('game-restarted', handleGameRestarted);
+    gameSocket.on('force-clear-chat', handleGameForceClear);
 
     return () => {
       gameSocket.off('new-round', handleGameNewRound);
       gameSocket.off('game-restarted', handleGameRestarted);
+      gameSocket.off('force-clear-chat', handleGameForceClear);
     };
   }, [gameSocket]);
 
