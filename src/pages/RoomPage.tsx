@@ -173,6 +173,7 @@ const RoomPage = () => {
       totalScore: number;
       drawerPoints?: number;
       drawerScore?: number;
+      isLastRound?: boolean;
       message: string;
     }) => {
       console.log('Correct guess:', data);

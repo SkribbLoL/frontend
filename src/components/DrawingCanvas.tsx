@@ -78,6 +78,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [roundDuration, setRoundDuration] = useState<number>(60);
   const [isLoadingNewRound, setIsLoadingNewRound] = useState(false);
   const [newRoundCountdown, setNewRoundCountdown] = useState(5);
+  const [isLastRound, setIsLastRound] = useState(false);
   
   // Game end state
   const [gameEndData, setGameEndData] = useState<{
@@ -182,6 +183,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setShowWordSelection(false);
       setRoundEndTime(null);
       setIsLoadingNewRound(false); // Clear loading state when new round starts
+      setIsLastRound(false); // Reset last round flag
     };
 
     const handleGameRestarted = (data: {
@@ -205,6 +207,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setRoundEndTime(null);
       setWordOptions([]);
       setIsLoadingNewRound(false);
+      setIsLastRound(false); // Reset last round flag
       
       // Clear the canvas when game restarts
       clearCanvas();
@@ -216,9 +219,13 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       word: string;
       points: number;
       totalScore: number;
+      isLastRound?: boolean;
       message: string;
     }) => {
       console.log('Correct guess detected:', data);
+      // Store if this is the last round
+      setIsLastRound(data.isLastRound || false);
+      
       // Start loading new round state with countdown
       setIsLoadingNewRound(true);
       setNewRoundCountdown(5);
@@ -577,7 +584,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
             Correct Guess!
           </h2>
           <p className="text-lg text-green-700 dark:text-green-300">
-            Loading new round...
+            {isLastRound ? 'Game ending...' : 'Loading new round...'}
           </p>
           <div className="text-3xl font-bold text-green-800 dark:text-green-200">
             {newRoundCountdown}
