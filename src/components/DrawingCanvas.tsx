@@ -153,17 +153,17 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       finalScores: Array<{ id: string; nickname: string; score: number }>;
       message: string;
     }) => {
-      console.log('Game ended event received:', data);
+      console.log('Game ended:', data);
       setGamePhase('game-end');
       setGameEndData({
         winner: data.winner,
-        winners: data.winners || [data.winner], // Use winners array if available, fallback to single winner
+        winners: data.winners,
         finalScores: data.finalScores
       });
-      setCurrentWord('');
-      setWordDisplay('');
-      setShowWordSelection(false);
-      setRoundEndTime(null);
+      setIsLoadingNewRound(false);
+      
+      // FORCE CLEAR CANVAS when game ends
+      clearCanvas();
     };
 
     const handleNewRound = (data: {
@@ -184,6 +184,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setRoundEndTime(null);
       setIsLoadingNewRound(false); // Clear loading state when new round starts
       setIsLastRound(false); // Reset last round flag
+      
+      // FORCE CLEAR CANVAS for new round
+      clearCanvas();
     };
 
     const handleGameRestarted = (data: {
@@ -209,7 +212,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setIsLoadingNewRound(false);
       setIsLastRound(false); // Reset last round flag
       
-      // Clear the canvas when game restarts
+      // FORCE CLEAR CANVAS when game restarts
       clearCanvas();
     };
 

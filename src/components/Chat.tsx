@@ -84,6 +84,13 @@ const Chat: React.FC<ChatProps> = ({
       message: string;
     }) => {
       console.log('Game mode changed:', data);
+      
+      // If game ended, clear chat immediately
+      if (!data.isGameStarted) {
+        console.log('Game ended - clearing chat');
+        setMessages([]);
+      }
+      
       const newMessage: Message = {
         id: `game-mode-${Date.now()}`,
         userId: 'system',
